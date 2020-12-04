@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:chore_helper/database/database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 
 part 'components/loading.dart';

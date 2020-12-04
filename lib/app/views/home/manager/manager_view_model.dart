@@ -49,6 +49,8 @@ class ManagerViewModel {
     ChoreDefinition cd = ChoreDefinition(properties[0],
         properties[1].split(","), DateTime(now.year, now.month, now.day, 0));
     ChoreService.storeChoreDefinition(cd);
+    chores.add(cd);
+    onDataChanged();
   }
 
   void savePressed(BuildContext context, ChoreDefinition chore) async {
@@ -56,7 +58,18 @@ class ManagerViewModel {
     if (doSave != true){
       return;
     }
+    print("going to save: " + chore.toString());
     ChoreService.storeChoreDefinition(chore);
+  }
+
+  void choresReordered(int oldIndex, int newIndex){
+    newIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
+    ChoreDefinition oldOne = this.chores[oldIndex];
+    ChoreDefinition newOne = this.chores[newIndex];
+    this.chores[newIndex] = oldOne;
+    this.chores[oldIndex] = newOne;
+    ChoreService.storeChoreDefinitions(this.chores);
+    onDataChanged();
   }
 
   //
@@ -90,14 +103,6 @@ class ManagerViewModel {
     // Override all available chores
     ChoreService.storeChoreDefinitions(this.chores);
     onDataChanged();
-  }
-
-  void addChore(ChoreDefinition chore) async {
-    ChoreService.storeChoreDefinition(chore).then((n) {
-      Future.delayed(Duration(milliseconds: 500)).then((n) {
-        init();
-      });
-    });
   }
 
   //

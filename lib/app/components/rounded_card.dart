@@ -5,7 +5,9 @@ class RoundedCard extends StatelessWidget {
   final double radius;
   final EdgeInsets padding;
   final Color color;
+  final Key key;
   RoundedCard({
+    this.key,
     this.child,
     this.radius = 8.0,
     this.padding = const EdgeInsets.all(4),
@@ -14,6 +16,7 @@ class RoundedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: this.key,
       color: this.color ?? Theme.of(context).cardColor,
       margin: this.padding,
       shape: RoundedRectangleBorder(

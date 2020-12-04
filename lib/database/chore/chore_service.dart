@@ -21,13 +21,12 @@ class ChoreService{
     return "${now.year}/${now.month}/${now.day}";
   }
 
-  static Future<List<ChoreModel>> getCurrentChores() async {
+  static Future<List<ChoreModel>> getCurrentChoresUsingChoreDefinitions() async {
     Completer<List<ChoreModel>> output = Completer();
     String folder = _todayFolder();
 
     getAllChoreDefinitions().then((choreDefinitions) async {
       List<ChoreModel> chores = List();
-
       for (ChoreDefinition definition in choreDefinitions){
         String data = await DatabaseService.getEntry(definition.name, folder);
         if (data.length <= 3){
@@ -51,6 +50,24 @@ class ChoreService{
     return output.future;
   }
 
+  static Future<List<ChoreModel>> getCurrentChores() async {
+    Completer<List<ChoreModel>> output = Completer();
+    String folder = _todayFolder();
+
+    DatabaseService.getEntries(folder).then((values) {
+      if (values == null || values.length == 0){
+        print("Having to get from definitions");
+        output.complete(getCurrentChoresUsingChoreDefinitions());
+        return;
+      }
+
+      List<ChoreModel> chores = values.map((v) => ChoreModel.fromString(v)).toList();
+      output.complete(chores);
+    });
+
+    return output.future;
+  }
+
   static Future<bool> storeChore(ChoreModel chore) async{
     String folder = _todayFolder();
     print("Storing Chore: ${chore.name}, $folder, ${chore.toString()}");
@@ -61,15 +78,20 @@ class ChoreService{
     Completer<bool> output = Completer<bool>();
 
     getAllChoreDefinitions().then((allChoreDefinitions){
-      for (ChoreDefinition def in allChoreDefinitions){
-        if (def.toString() == definition.toString()){
-          output.complete(true); // Chore already exists
-          return;
-        }
+      if (allChoreDefinitions.where((n) => n.toString() == definition.toString()).isNotEmpty){
+        return true;
       }
+
+      // Remove current item
+      allChoreDefinitions.removeWhere((e) => e.id == definition.id);
+
+      // Add updated one
       allChoreDefinitions.add(definition);
+
+      // Store them all again
       output.complete(storeChoreDefinitions(allChoreDefinitions));
     }, onError: (e){
+      print(e);
       List<ChoreDefinition> newChores = List();
       newChores.add(definition);
       storeChoreDefinitions(newChores);
