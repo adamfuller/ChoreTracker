@@ -24,10 +24,16 @@ class ChoreService{
     return _BASE_FOLDER + "/" + _todayFolder();
   }
 
+  static String _dateFolder(DateTime date){
+    return "${date.year}/${date.month}/${date.day}";
+  }
+
   static String _todayFolder() {
     DateTime now = DateTime.now();
-    return "${now.year}/${now.month}/${now.day}";
+    return _dateFolder(now);
   }
+
+
 
   /// Get chores based on all chore definitions
   static Future<List<ChoreModel>> _getCurrentChores() async {
@@ -37,7 +43,7 @@ class ChoreService{
     ChoreDefinitionService.getAllChoreDefinitions().then((choreDefinitions) async {
       List<ChoreModel> chores = List();
       for (ChoreDefinition definition in choreDefinitions){
-        String data = await DatabaseService.getEntry(definition.name, folder);
+        String data = await DatabaseService.getEntry(definition.id, folder);
         if (data.length <= 3){
           chores.add(ChoreModel.fromDefinition(definition));
           storeChore(chores.last); // store this one
@@ -62,19 +68,32 @@ class ChoreService{
     return output.future;
   }
 
-  static Future<List<ChoreModel>> getCurrentChores() async {
+  static Future<List<ChoreModel>> getChores(DateTime date){
     Completer<List<ChoreModel>> output = Completer();
-    String folder = _todayFolder();
+    String folder = _dateFolder(date);
 
     DatabaseService.getEntries(folder).then((values) {
-      print(values);
-      if (values == null || values.length == 0){
+      List<ChoreModel> chores = values.map((v) => ChoreModel.fromString(v)).toList();
+      chores.removeWhere((_) => _ == null);
+      output.complete(chores);
+    }, onError: (e){
+      print(e);
+      output.complete(List<ChoreModel>());
+    });
+
+    return output.future;
+  }
+
+  static Future<List<ChoreModel>> getCurrentChores() async {
+    Completer<List<ChoreModel>> output = Completer();
+
+    getChores(DateTime.now()).then((chores){
+      print(chores);
+      if (chores == null || chores.length == 0){
         print("Having to get from definitions");
         output.complete(_getCurrentChores());
         return;
       }
-
-      List<ChoreModel> chores = values.map((v) => ChoreModel.fromString(v)).toList();
       output.complete(chores);
     }, onError: (e){
       print(e);
@@ -88,14 +107,14 @@ class ChoreService{
   static Future<bool> storeChore(ChoreModel chore) async{
     String folder = _todayFolder();
     print("Storing Chore: ${chore.name}, $folder, ${chore.toString()}");
-    return DatabaseService.setEntry(chore.name, folder, chore.toString());
+    return DatabaseService.setEntry(chore.id, folder, chore.toString());
   }
 
   /// Delete a chore for the current day.
   static Future<bool> deleteChore(ChoreModel chore) async{
     String folder = _todayFolder();
     print("Deleting Chore: ${chore.name}, $folder, ${chore.toString()}");
-    return DatabaseService.deleteEntry(chore.name, folder);
+    return DatabaseService.deleteEntry(chore.id, folder);
   }
 
 }

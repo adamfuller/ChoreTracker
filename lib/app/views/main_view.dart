@@ -33,7 +33,6 @@ class _MainViewState extends State<MainView> {
 
       ),
       debugShowCheckedModeBanner: false,
-      title: 'Nomad',
       home: _getHome(),
     );
   }
@@ -42,7 +41,7 @@ class _MainViewState extends State<MainView> {
     if (vm.isLoading) {
       return Loading();
     } else {
-      return HomeView();
+      return ChoresView(isHome:true);
     }
   }
 }

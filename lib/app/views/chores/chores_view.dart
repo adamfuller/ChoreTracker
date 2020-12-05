@@ -1,43 +1,54 @@
 part of app;
 
-class HomeView extends StatefulWidget {
+class ChoresView extends StatefulWidget {
+  final bool isHome;
+  final DateTime date;
+  ChoresView({this.isHome=false, this.date});
   @override
   State<StatefulWidget> createState() {
-    return _HomeViewState();
+    return _ChoresViewState();
   }
 }
 
-class _HomeViewState extends State<HomeView> {
-  HomeViewModel vm;
+class _ChoresViewState extends State<ChoresView> {
+  ChoresViewModel vm;
 
   @override
   void initState() {
-    vm = HomeViewModel(() {
+    vm = ChoresViewModel(() {
       setState(() {});
-    });
+    }, date: widget.date);
 
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    String dateString = "";
+    if (widget.date != null){
+      dateString = " - " + DateFormat("d MMM y").format(widget.date);
+    }
     return Scaffold(
       key: vm.scaffoldKey,
       appBar: AppBar(
-        title: Text("Chores"),
+        title: Text("Chores" + dateString),
         backgroundColor: Colors.blueGrey,
-        actions: [
+        actions: widget.isHome ? [
+          IconButton(
+            icon: Icon(Icons.calendar_today),
+            onPressed: () => vm.datePressed(context),
+          ),
           IconButton(
             icon: Icon(Icons.edit),
             onPressed: () => vm.menuPressed(context),
           ),
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () => vm.scaffoldKey.currentState.openEndDrawer(),
-          ),
-        ],
+          // IconButton(
+          //   icon: Icon(Icons.menu),
+          //   onPressed: () => vm.openSideMenuPressed(context),
+          // ),
+        ] : [],
       ),
-      endDrawer: _getEndDrawer(context),
+      endDrawer: widget.isHome ? _getEndDrawer(context) : null,
       body: vm.isLoading ? Loading() : _getBody(),
     );
   }
@@ -45,7 +56,7 @@ class _HomeViewState extends State<HomeView> {
   Widget _getBody() {
     if (vm.chores == null || vm.chores.length == 0) {
       return Center(
-        child: Text("No chores yet"),
+        child: Text("No Chores Available"),
       );
     }
     return Center(
@@ -60,7 +71,7 @@ class _HomeViewState extends State<HomeView> {
               return RoundedCard(
                 child: ListTile(
                   title: Text(vm.chores[index].name),
-                  subtitle: Text(vm.chores[index].owner),
+                  subtitle: Text(vm.chores[index]?.owner?.trim()??""),
                   trailing: _getCompleteButton(vm.chores[index]),
                 ),
               );
@@ -87,9 +98,9 @@ class _HomeViewState extends State<HomeView> {
   Widget _getCompleteButton(ChoreModel chore) {
     return IconButton(
       icon: Icon(Icons.check_circle_outline_rounded),
-      disabledColor: Colors.green,
+      disabledColor: chore.done ? Colors.green : Colors.blueGrey,
       color: chore.done ? Colors.green : Colors.blueGrey,
-      onPressed: () => vm.markDone(chore, isDone: !chore.done),
+      onPressed: widget.isHome ? () => vm.markDone(chore, isDone: !chore.done) : null,
     );
   }
 }
