@@ -26,7 +26,9 @@ class ChoreDefinitionService {
     Completer<bool> output = new Completer();
     List<Future<bool>> values =
         definitions.map((d) => storeChoreDefinition(d)).toList();
-
+    for (int i = 0; i<definitions.length; i++){
+      definitions[i].index = i;
+    }
     Future.wait(values).then((items) {
       output.complete(!items.any((e) => !e));
     });

@@ -13,6 +13,9 @@ class HomeViewModel {
   bool isLoading = true;
   List<ChoreModel> chores;
 
+  RefreshController refreshController;
+  final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
+
   //
   // Getters
   //
@@ -30,13 +33,19 @@ class HomeViewModel {
   void init() async {
     if (_listeners == null) _attachListeners();
 
+    refreshController ??= RefreshController(initialRefresh: false, initialRefreshStatus: RefreshStatus.completed);
     await _getChores();
 
     this.isLoading = false;
     print("Done with init");
     onDataChanged();
+    refreshController.loadComplete();
+    refreshController.refreshCompleted(resetFooterState: true);
   }
 
+  void openSideMenuPressed(BuildContext context) {
+
+  }
 
   void menuPressed(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute(builder: (context) => ManagerView())).then((n){
@@ -62,6 +71,7 @@ class HomeViewModel {
 
   Future<void> _getChores() async {
     chores = await ChoreService.getCurrentChores();
+    chores.sort((a,b) => a?.index?.compareTo(b?.index));
   }
 
   //
@@ -70,5 +80,7 @@ class HomeViewModel {
   void dispose() {
     this._listeners?.forEach((_) => _.cancel());
   }
+
+
 
 }

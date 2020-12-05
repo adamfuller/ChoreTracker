@@ -22,20 +22,22 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: vm.scaffoldKey,
       appBar: AppBar(
         title: Text("Chores"),
         backgroundColor: Colors.blueGrey,
         actions: [
           IconButton(
-            icon: Icon(Icons.menu),
+            icon: Icon(Icons.edit),
             onPressed: () => vm.menuPressed(context),
           ),
           IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: vm.init,
-          )
+            icon: Icon(Icons.menu),
+            onPressed: () => vm.scaffoldKey.currentState.openEndDrawer(),
+          ),
         ],
       ),
+      endDrawer: _getEndDrawer(context),
       body: vm.isLoading ? Loading() : _getBody(),
     );
   }
@@ -47,17 +49,38 @@ class _HomeViewState extends State<HomeView> {
       );
     }
     return Center(
-      child: ListView.builder(
-          itemCount: vm.chores?.length ?? 0,
-          itemBuilder: (context, index) {
-            return RoundedCard(
-              child: ListTile(
-                title: Text(vm.chores[index].name),
-                subtitle: Text(vm.chores[index].owner),
-                trailing: _getCompleteButton(vm.chores[index]),
-              ),
-            );
-          }),
+      child: SmartRefresher(
+        enablePullDown: true,
+        controller: vm.refreshController,
+        header: WaterDropHeader(),
+        onRefresh: vm.init,
+        child: ListView.builder(
+            itemCount: vm.chores?.length ?? 0,
+            itemBuilder: (context, index) {
+              return RoundedCard(
+                child: ListTile(
+                  title: Text(vm.chores[index].name),
+                  subtitle: Text(vm.chores[index].owner),
+                  trailing: _getCompleteButton(vm.chores[index]),
+                ),
+              );
+            }),
+      ),
+    );
+  }
+
+  Widget _getEndDrawer(context) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 3 / 4,
+      height: MediaQuery.of(context).size.height,
+      color: Colors.white60,
+      child: Center(
+        child: ListView(
+          children: [
+            Text("Hello", textAlign: TextAlign.center,),
+          ],
+        ),
+      ),
     );
   }
 

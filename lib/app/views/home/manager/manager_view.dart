@@ -30,10 +30,6 @@ class _ManagerViewState extends State<ManagerView> {
             icon: Icon(Icons.add),
             onPressed: () => vm.addDefinitionPressed(context),
           ),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: vm.init,
-          )
         ],
       ),
       body: vm.isLoading ? Loading() : _getBody(),
@@ -46,30 +42,36 @@ class _ManagerViewState extends State<ManagerView> {
     }
 
     return Center(
-      child: ReorderableListView(
-        onReorder: vm.choresReordered,
-        // itemCount: vm.chores?.length ?? 0,
-        children: vm.chores.map<Widget>((chore) {
-          return Slidable(
-            actionPane: SlidableDrawerActionPane(),
-            actionExtentRatio: 0.25,
-            secondaryActions: <Widget>[
-              IconSlideAction(
-                caption: 'Delete',
-                color: Colors.red,
-                icon: Icons.delete,
-                onTap: () => vm.removeChore(context, chore),
-              ),
-            ],
-            key: ValueKey(chore.id),
-            child: _getChoreCard(chore),
-          );
-        }).toList(),
+      child: SmartRefresher(
+        enablePullDown: true,
+        controller: vm.refreshController,
+        header: WaterDropHeader(),
+        onRefresh: () => vm.init(),
+        child: ReorderableListView(
+          onReorder: vm.choresReordered,
+          // itemCount: vm.chores?.length ?? 0,
+          children: vm.chores.map<Widget>((chore) {
+            return Slidable(
+              actionPane: SlidableDrawerActionPane(),
+              actionExtentRatio: 0.25,
+              secondaryActions: <Widget>[
+                IconSlideAction(
+                  caption: 'Delete',
+                  color: Colors.red,
+                  icon: Icons.delete,
+                  onTap: () => vm.removeChore(context, chore),
+                ),
+              ],
+              key: ValueKey(chore.id),
+              child: _getChoreCard(chore),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
-  Widget _getChoreCard(ChoreDefinition chore){
+  Widget _getChoreCard(ChoreDefinition chore) {
     return RoundedCard(
       child: Padding(
         padding: EdgeInsets.fromLTRB(3, 0, 3, 8),
