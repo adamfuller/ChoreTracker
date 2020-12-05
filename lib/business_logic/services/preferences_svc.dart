@@ -1,27 +1,49 @@
 part of business_logic;
 
 class PreferencesSvc{
-  PreferencesSvc _instance;
-  SharedPreferences _prefs;
+  static PreferencesSvc _instance;
+  static SharedPreferences _prefs;
+  static Map<String, dynamic> _cache;
 
   PreferencesSvc(){
-     SharedPreferences.getInstance().then((value) => _prefs = value);
+    if (_prefs == null){
+      init();
+    }
+  }
+
+  static Future<bool> init() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    _instance ??= PreferencesSvc();
+    _cache ??= Map();
+    return true;
   }
   
   PreferencesSvc getInstance(){
-    if (_instance == null){
-      _instance = PreferencesSvc();
-    }
+    _instance ??= PreferencesSvc();
     return _instance;
   }
 
-  String getString(String key){
-    if (_prefs == null){
-      SharedPreferences.getInstance().then((value) => _prefs ??= value);
-      return null;
-    }
+  Future<bool> setString(String key, String value) async {
+    Completer<bool> output = Completer();
+    _cache[key] = value;
 
-    return _prefs.getString(key);
+    if (_prefs == null){
+      init().then((v) => setString(key, value));
+    }
+    _prefs?.setString(key, value)?.then((e){
+      output.complete(true);
+      _cache.remove(key);
+    }, onError: (e){
+      output.complete(false);
+      _cache.remove(key);
+    });
+
+
+    return output.future;
+  }
+
+  String getString(String key){
+    return _cache.containsKey(key) ? _cache[key] : _prefs?.getString(key);
   }
   
 }
