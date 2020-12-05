@@ -6,19 +6,23 @@ import "dart:io";
 class DatabaseService{
   static const String _SERVER = "www.octalbyte.com";
   static const int _PORT = 8081;
+  static const String _FETCH = "FETCH";
+  static const String _STORE = "STORE";
+  static const String _DELETE = "DELETE";
 
   static Future<List<String>> getEntries(String path) async{
     Completer<List<String>> output = Completer<List<String>>();
     Socket socket = await Socket.connect(_SERVER, _PORT, timeout: Duration(seconds: 5));
-    socket.write("::${path.replaceAll(":", "_:_")}:::");// send request for item at path
+    print("$_FETCH::${path.replaceAll(":", "_:_")}:::");
+    socket.write("$_FETCH::${path.replaceAll(":", "_:_")}:::");// send request for item at path
     await socket.flush();
 
     socket.listen((value) {
       String input = new String.fromCharCodes(value); // convert bytes back
-      // print("Value: " + input);
+      print("Value: " + input);
       List<String> values = input.split("::").map((n) => n.replaceAll("_:_", ":")).toList(); // Split and make safe
       values.removeWhere((element) => element == null || element == "" || element == " ");
-      // print(values);
+      print(values);
       output.complete(values); // Record output
       socket.close();
     }, onError: (e){
@@ -35,10 +39,12 @@ class DatabaseService{
     // Future<String> output = Future<String>();
     Completer<String> output = Completer<String>();
     Socket socket = await Socket.connect(_SERVER, _PORT, timeout: Duration(seconds: 5));
-    socket.write("${id.replaceAll(":", "_:_")}::${path.replaceAll(":", "_:_")}:::");// send request for item at path
+    print("$_FETCH::${path.replaceAll(":", "_:_")}::${id.replaceAll(":", "_:_")}:::");
+    socket.write("$_FETCH::${path.replaceAll(":", "_:_")}::${id.replaceAll(":", "_:_")}:::");// send request for item at path
     await socket.flush();
 
     socket.listen((value) {
+      print("socket returned '$value'");
       output.complete(new String.fromCharCodes(value).replaceAll("_:_", ":")); // convert bytes back
       socket.close();
     }, onError: (e){
@@ -55,7 +61,31 @@ class DatabaseService{
     Completer<bool> output = Completer<bool>();
     Socket socket = await Socket.connect(_SERVER, _PORT, timeout: Duration(seconds: 5));
     // Ensure bytes are safe
-    socket.write("${id.replaceAll(":", "_:_")}::${path.replaceAll(":", "_:_")}::${value.replaceAll(":", "_:_")}:::");// send request for item at path
+    socket.write("$_STORE::${path.replaceAll(":", "_:_")}::${id.replaceAll(":", "_:_")}::${value.replaceAll(":", "_:_")}:::");// send request for item at path
+    await socket.flush();
+
+    socket.listen((value) {
+      if (!output.isCompleted){
+        output.complete(true);
+      }
+      socket.close();
+    }, onError: (e){
+      socket.close();
+      output.complete(false);
+    }, onDone: (){
+      if (!output.isCompleted){
+        output.complete(true);
+      }
+    });
+
+    return output.future;
+  }
+
+  static Future<bool> deleteEntry(String id, String path) async{
+    Completer<bool> output = Completer<bool>();
+    Socket socket = await Socket.connect(_SERVER, _PORT, timeout: Duration(seconds: 5));
+    // Ensure bytes are safe
+    socket.write("$_DELETE::${path.replaceAll(":", "_:_")}::${id.replaceAll(":", "_:_")}:::");// send request for item at path
     await socket.flush();
 
     socket.listen((value) {

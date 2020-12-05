@@ -11,7 +11,7 @@ class ManagerViewModel {
   //
   Function onDataChanged;
   bool isLoading = true;
-  List<ChoreDefinition> chores;
+  List<ChoreDefinition> chores = List();
 
   //
   // Getters
@@ -34,6 +34,7 @@ class ManagerViewModel {
     await _getChores();
 
     this.isLoading = false;
+    print("Done with init");
     onDataChanged();
   }
 
@@ -48,7 +49,11 @@ class ManagerViewModel {
     // Create Chore Definition for today at midnight
     ChoreDefinition cd = ChoreDefinition(properties[0],
         properties[1].split(","), DateTime(now.year, now.month, now.day, 0));
-    ChoreService.storeChoreDefinition(cd);
+    ChoreDefinitionService.storeChoreDefinition(cd);
+    ChoreModel chore = ChoreModel.fromDefinition(cd);
+    if (chore != null){
+      ChoreService.storeChore(chore);
+    }
     chores.add(cd);
     onDataChanged();
   }
@@ -59,7 +64,7 @@ class ManagerViewModel {
       return;
     }
     print("going to save: " + chore.toString());
-    ChoreService.storeChoreDefinition(chore);
+    ChoreDefinitionService.storeChoreDefinition(chore);
   }
 
   void choresReordered(int oldIndex, int newIndex){
@@ -68,7 +73,7 @@ class ManagerViewModel {
     ChoreDefinition newOne = this.chores[newIndex];
     this.chores[newIndex] = oldOne;
     this.chores[oldIndex] = newOne;
-    ChoreService.storeChoreDefinitions(this.chores);
+    // ChoreService.storeChoreDefinitions(this.chores);
     onDataChanged();
   }
 
@@ -82,7 +87,7 @@ class ManagerViewModel {
   }
 
   Future<void> _getChores() async {
-    this.chores = await ChoreService.getAllChoreDefinitions();
+    this.chores = await ChoreDefinitionService.getAllChoreDefinitions();
   }
 
   void removeChore(BuildContext context, ChoreDefinition chore) async {
@@ -101,7 +106,7 @@ class ManagerViewModel {
     this.chores.remove(chore);
 
     // Override all available chores
-    ChoreService.storeChoreDefinitions(this.chores);
+    ChoreDefinitionService.deleteChoreDefinition(chore);
     onDataChanged();
   }
 

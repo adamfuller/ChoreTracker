@@ -30,16 +30,18 @@ class HomeViewModel {
   void init() async {
     if (_listeners == null) _attachListeners();
 
-
     await _getChores();
 
     this.isLoading = false;
+    print("Done with init");
     onDataChanged();
   }
 
 
   void menuPressed(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => ManagerView()));
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => ManagerView())).then((n){
+      init();
+    });
   }
 
   void markDone(ChoreModel chore, {bool isDone=true}){
