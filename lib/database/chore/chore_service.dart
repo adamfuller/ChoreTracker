@@ -91,4 +91,11 @@ class ChoreService{
     return DatabaseService.setEntry(chore.name, folder, chore.toString());
   }
 
+  /// Delete a chore for the current day.
+  static Future<bool> deleteChore(ChoreModel chore) async{
+    String folder = _todayFolder();
+    print("Deleting Chore: ${chore.name}, $folder, ${chore.toString()}");
+    return DatabaseService.deleteEntry(chore.name, folder);
+  }
+
 }

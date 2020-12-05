@@ -84,10 +84,13 @@ class _ManagerViewState extends State<ManagerView> {
               onPressed: () => vm.savePressed(context, chore),
             ),
             _getDefinitionInputs(context, chore),
-            Padding(
-              padding: EdgeInsets.all(5),
-              child: Icon(Icons.drag_handle),
-            ),
+            Column(mainAxisSize:MainAxisSize.min, children:[
+              Text("${chore.index}"),
+              Padding(
+                padding: EdgeInsets.all(5),
+                child: Icon(Icons.drag_handle),
+              ),
+            ]),
           ],
         ),
       ),

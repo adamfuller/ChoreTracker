@@ -35,7 +35,6 @@ class ManagerViewModel {
     await _getChores();
 
     this.isLoading = false;
-    print("Done with init");
     onDataChanged();
     // Mark load and refresh completed
     refreshController.loadComplete();
@@ -75,16 +74,23 @@ class ManagerViewModel {
 
   void choresReordered(int oldIndex, int newIndex) {
     newIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
-    ChoreDefinition oldOne = this.chores[oldIndex];
-    ChoreDefinition newOne = this.chores[newIndex];
-    this.chores[newIndex] = oldOne;
-    this.chores[oldIndex] = newOne;
 
-    this.chores[newIndex].index = newIndex;
-    this.chores[oldIndex].index = oldIndex;
-    ChoreDefinitionService.storeChoreDefinition(this.chores[newIndex]);
-    ChoreDefinitionService.storeChoreDefinition(this.chores[oldIndex]);
-    // ChoreService.storeChoreDefinitions(this.chores);
+    ChoreDefinition orig = chores[oldIndex];
+    chores.removeAt(oldIndex);
+    chores.insert(newIndex, orig);
+
+    int minIndex = min(newIndex, oldIndex);
+    int maxIndex = max(newIndex, oldIndex);
+
+    // Update all items in between
+    for (int i = minIndex; i<=maxIndex; i++){
+      ChoreDefinitionService.getChoreDefinition(chores[i]).then((def){
+        def.index = i;
+        ChoreDefinitionService.storeChoreDefinition(def);
+      });
+      chores[i].index = i;
+    }
+
     onDataChanged();
   }
 
@@ -98,11 +104,15 @@ class ManagerViewModel {
   }
 
   Future<void> _getChores() async {
-    this.chores = await ChoreDefinitionService.getAllChoreDefinitions();
-    for (int i = 0; i < chores.length; i++) {
+    chores = await ChoreDefinitionService.getAllChoreDefinitions();
+    chores.sort((a,b) => a?.index?.compareTo(b?.index)??0);
+    for (int i = 0; i<chores.length; i++){
+      bool wasNull = chores[i].index == null;
       chores[i].index ??= i;
+      if (wasNull){
+        ChoreDefinitionService.storeChoreDefinition(chores[i]);
+      }
     }
-    this.chores.sort((a, b) => a.index.compareTo(b.index));
   }
 
   void removeChore(BuildContext context, ChoreDefinition chore) async {
@@ -119,10 +129,20 @@ class ManagerViewModel {
       return;
     }
 
+    int index = chores.indexOf(chore);
     this.chores.remove(chore);
+
+    for (int i = index; i<chores.length; i++){
+      ChoreDefinitionService.getChoreDefinition(chores[i]).then((def){
+        def.index = i;
+        ChoreDefinitionService.storeChoreDefinition(def);
+      });
+      chores[i].index = i;
+    }
 
     // Override all available chores
     ChoreDefinitionService.deleteChoreDefinition(chore);
+    ChoreService.deleteChore(ChoreModel.fromDefinition(chore));
     onDataChanged();
   }
 

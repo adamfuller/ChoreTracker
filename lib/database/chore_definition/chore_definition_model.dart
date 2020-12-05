@@ -32,7 +32,7 @@ class ChoreDefinition {
     return this._id;
   }
 
-  ChoreDefinition(this.name, this.owners, this.startDate, {String id, int index=0}) {
+  ChoreDefinition(this.name, this.owners, this.startDate, {String id, this.index=0}) {
     // this._originalName = name;
     // this._originalOwners = this.owners;
     // this._originalStartDate = this.startDate;
