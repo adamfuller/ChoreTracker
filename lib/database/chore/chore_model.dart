@@ -11,39 +11,48 @@ class ChoreModel {
   bool done;
   int index;
 
-  ChoreModel(this.name, this.owner, this.done, this.id, {this.index=0});
+  ChoreModel({this.name, this.owner, this.done, this.id, this.index = 0});
 
-  static ChoreModel fromDefinition(ChoreDefinition definition){
-    String name = definition.name;
+  static ChoreModel fromDefinition(ChoreDefinition definition) {
     int daysSince = definition.startDate.difference(DateTime.now()).inDays;
     String owner = definition.owners[daysSince % definition.owners.length];
-    int index = definition.index ?? 0;
-    String id = definition.id;
-    return ChoreModel(name, owner, false, id, index:index);
+    return ChoreModel(
+      name: definition.name,
+      owner: owner,
+      done: false,
+      id: definition.id,
+      index: definition.index ?? 0,
+    );
   }
 
-  static ChoreModel fromString(String input){
-    List<String> vals = input.split(",");
-    if (vals.length < 5){
-      print("Vals not long enough: '$input'");
-      return null;
-    }
-    bool done = vals[_DONE_INDEX].toLowerCase() == "true";
-    int index = int.tryParse(vals.length > _INDEX_INDEX ? vals[_INDEX_INDEX] : "0") ?? 0;
-    return ChoreModel(vals[_NAME_INDEX], vals[_OWNER_INDEX], done, vals[_ID_INDEX], index:index);
+  Map<String, dynamic> toJson() {
+    return {
+      "name": this.name,
+      "owner": this.owner,
+      "id": this.id,
+      "done": this.done,
+      "index": this.index,
+    };
+  }
+
+  static ChoreModel fromJson(Map<String, dynamic> map) {
+    return ChoreModel(
+      name: map["name"] as String,
+      owner: map["owner"] as String,
+      done: map["done"] as bool ?? false,
+      id: map["id"] as String,
+      index: map["index"] as int,
+    );
+  }
+
+  static ChoreModel fromString(String input) {
+    Map map = Map.castFrom(json.decode(input)).cast<String, dynamic>();
+    return fromJson(map);
   }
 
   @override
   String toString() {
     // DateTime now = DateTime.now();
-    // String dateString = "${now.year}/${now.month}/${now.day}";
-    List<String> output = List(5);
-    output[_NAME_INDEX] = this.name;
-    output[_OWNER_INDEX] = this.owner;
-    output[_DONE_INDEX] = "${this.done}";
-    output[_INDEX_INDEX] = "${this.index}";
-    output[_ID_INDEX] = this.id;
-    return output.join(",");
+    return jsonEncode(toJson());
   }
-
 }

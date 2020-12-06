@@ -50,9 +50,12 @@ class ManagerViewModel {
     }
     DateTime now = DateTime.now();
     // Create Chore Definition for today at midnight
-    ChoreDefinition cd = ChoreDefinition(properties[0],
-        properties[1].split(","), DateTime(now.year, now.month, now.day, 0),
-        index: chores.length);
+    ChoreDefinition cd = ChoreDefinition(
+      name: properties[0],
+      owners: properties[1].split(","),
+      startDate: DateTime(now.year, now.month, now.day, 0),
+      index: chores.length,
+    );
     ChoreDefinitionService.storeChoreDefinition(cd);
     ChoreModel chore = ChoreModel.fromDefinition(cd);
     if (chore != null) {
@@ -83,8 +86,8 @@ class ManagerViewModel {
     int maxIndex = max(newIndex, oldIndex);
 
     // Update all items in between
-    for (int i = minIndex; i<=maxIndex; i++){
-      ChoreDefinitionService.getChoreDefinition(chores[i]).then((def){
+    for (int i = minIndex; i <= maxIndex; i++) {
+      ChoreDefinitionService.getChoreDefinition(chores[i]).then((def) {
         def.index = i;
         ChoreDefinitionService.storeChoreDefinition(def);
       });
@@ -105,11 +108,11 @@ class ManagerViewModel {
 
   Future<void> _getChores() async {
     chores = await ChoreDefinitionService.getAllChoreDefinitions();
-    chores.sort((a,b) => a?.index?.compareTo(b?.index)??0);
-    for (int i = 0; i<chores.length; i++){
+    chores.sort((a, b) => a?.index?.compareTo(b?.index) ?? 0);
+    for (int i = 0; i < chores.length; i++) {
       bool wasNull = chores[i].index == null;
       chores[i].index ??= i;
-      if (wasNull){
+      if (wasNull) {
         ChoreDefinitionService.storeChoreDefinition(chores[i]);
       }
     }
@@ -132,8 +135,8 @@ class ManagerViewModel {
     int index = chores.indexOf(chore);
     this.chores.remove(chore);
 
-    for (int i = index; i<chores.length; i++){
-      ChoreDefinitionService.getChoreDefinition(chores[i]).then((def){
+    for (int i = index; i < chores.length; i++) {
+      ChoreDefinitionService.getChoreDefinition(chores[i]).then((def) {
         def.index = i;
         ChoreDefinitionService.storeChoreDefinition(def);
       });

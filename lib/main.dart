@@ -3,6 +3,9 @@ import 'package:chore_helper/business_logic/business_logic.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
-  PreferencesSvc.init();
+  Future.delayed(Duration(milliseconds: 50), (){
+    PreferencesSvc.init();
+  });
   runApp(MainView());
 }
+
