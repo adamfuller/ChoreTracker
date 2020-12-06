@@ -1,4 +1,4 @@
-package com.example.chore_helper
+package com.justanotherdev.chore_helper
 
 import io.flutter.embedding.android.FlutterActivity
 
