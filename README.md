@@ -1,6 +1,6 @@
-# chore_helper
+# Chore Tracker
 
-A new Flutter project.
+A simple app to monitor daily household chores.
 
 ## Getting Started
 
